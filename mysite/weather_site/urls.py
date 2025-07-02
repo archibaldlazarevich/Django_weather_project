@@ -1,6 +1,4 @@
-from django.urls import path
-
-# from .views import WeatherView
+# from django.urls import path
 
 
 app_name = "weather_site"

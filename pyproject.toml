@@ -1,5 +1,5 @@
 [project]
-name = "dgango-weather-project"
+name = "django-weather-project"
 version = "0.1.0"
 description = "Django pet project"
 authors = [
