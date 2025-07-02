@@ -20,12 +20,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-p(b%!z-s&zgrwg+rjxfini_9_u82qv$l85z&w7&szkeq6)41(#"
+SECRET_KEY = (
+    "django-insecure-p(b%!z-s&zgrwg+rjxfini_9_u82qv$l85z&w7&szkeq6)41(#"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: list = []
 
 
 # Application definition
@@ -37,7 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'weather_site.apps.WeatherSiteConfig',
+    "weather_site.apps.WeatherSiteConfig",
 ]
 
 MIDDLEWARE = [
@@ -86,16 +88,20 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation."
+                "UserAttributeSimilarityValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "django.contrib.auth.password_validation."
+                "MinimumLengthValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation."
+                "CommonPasswordValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation."
+                "NumericPasswordValidator",
     },
 ]
 
