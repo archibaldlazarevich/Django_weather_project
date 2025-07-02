@@ -39,4 +39,4 @@ jobs:
         poetry run isort --check-only --profile=black mysite/
     - name: Run Tests
       run: |
-        python mysite/manage.py test
+        poetry run python mysite/manage.py test
