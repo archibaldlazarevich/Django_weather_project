@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install poetry
-        poetry install --no-interaction --no-ansi
+        poetry install --no-interaction --no-ansi --no-root
     - name: Lint with flake8
       run: |
         flake8 mysite/
