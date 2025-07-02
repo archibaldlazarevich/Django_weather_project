@@ -1,5 +1,5 @@
 [project]
-name = "dgango-weather-project"
+name = "django-weather-project"
 version = "0.1.0"
 description = "Django pet project"
 authors = [
@@ -7,6 +7,9 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.12"
+packages = [
+    { include = "mysite" }
+]
 dependencies = [
     "black (>=25.1.0,<26.0.0)",
     "flake8 (>=7.3.0,<8.0.0)",
