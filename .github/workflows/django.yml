@@ -17,14 +17,26 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.12.3
       uses: actions/setup-python@v3
       with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install Dependencies
+        python-version: "3.12.3"
+    - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install poetry
+        poetry install --no-interaction --no-ansi
+    - name: Lint with flake8
+      run: |
+        flake8 mysite/
+    - name: Lint with mypy
+      run: |
+        mypy mysite/
+    - name: Lint with black
+      run: |
+        black --check --line-length 79 mysite/
+    - name: Lint with isort
+      run: |
+        isort --check-only --profile=black mysite/
     - name: Run Tests
       run: |
-        python manage.py test
+        python mysite/manage.py test
