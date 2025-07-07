@@ -1,0 +1,42 @@
+{% extends 'weather_site/base.html' %}
+{% load static %}
+
+{% block title %}
+    Главная страница
+{% endblock %}
+
+{% block body %}
+<style>
+    main {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 70vh;
+    }
+
+    .weather-btn {
+        display: block;
+        width: 50%;
+        padding: 20px 0;
+        background: #5057a0;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 30px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin: 10px auto;
+        text-align: center;
+    }
+    .weather-btn:hover {
+        background: #3b3f66;
+    }
+</style>
+
+<main>
+    <button type="submit" class="weather-btn">Узнать прогноз погоды</button><br>
+</main>
+
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'weather_site/base.html' %}
+{% load static %}
+
+{% block title %}Weather site{% endblock %}
+
+{% block body %}
+<h2>Прогноз погоды для {{ city|default:"вашего местоположения" }}</h2>
+
+<div id="weather-container" style="display: flex; gap: 40px;">
+
+    <!-- Блок с текущей погодой -->
+    <section id="current-weather" style="flex: 1; border: 1px solid #ccc; padding: 20px;">
+        {% if weather_current %}
+            <h3>Текущая погода</h3>
+            <p><strong>Город:</strong> {{ weather_current.name }}</p>
+            <p><strong>Температура:</strong> {{ weather_current.main.temp }} °C</p>
+            <p><strong>Погода:</strong> {{ weather_current.weather.0.description }}</p>
+            <p><strong>Ветер:</strong> {{ weather_current.wind.speed }} м/с</p>
+        {% else %}
+            <p>Данные о текущей погоде недоступны.</p>
+        {% endif %}
+    </section>
+
+    <!-- Блок с прогнозом на 5 дней -->
+    <section id="forecast-5days" style="flex: 1; border: 1px solid #ccc; padding: 20px; overflow-y: auto; max-height: 400px;">
+        {% if weather_forecast %}
+            <h3>Прогноз на 5 дней</h3>
+            <ul>
+                {% for item in weather_forecast.list %}
+                    <li>
+                        <strong>{{ item.dt_txt }}:</strong>
+                        {{ item.main.temp }} °C, {{ item.weather.0.description }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Данные о прогнозе недоступны.</p>
+        {% endif %}
+    </section>
+
+</div>
+
+<script>
+// Получаем геолокацию пользователя и перезагружаем страницу с параметром city
+document.addEventListener('DOMContentLoaded', () => {
+    if (!'{{ city }}') {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                // Обратный геокодинг через OpenWeatherMap API для получения города
+                const apiKey = '{{ OPENWEATHER_API_KEY }}';
+                fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            const city = data[0].name;
+                            // Перезагружаем страницу с параметром city
+                            const url = new URL(window.location);
+                            url.searchParams.set('city', city);
+                            window.location.href = url.toString();
+                        }
+                    });
+            }, error => {
+                console.error('Ошибка получения геолокации:', error);
+            });
+        } else {
+            console.error('Геолокация не поддерживается вашим браузером');
+        }
+    }
+});
+</script>
+
+{% endblock %}
