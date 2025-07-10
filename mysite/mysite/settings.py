@@ -10,7 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +30,13 @@ SECRET_KEY = (
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS: list = []
+ALLOWED_HOSTS: list = ["a1140230.xsph.ru", "141.8.192.84"]
+
+load_dotenv()  # загружает переменные из .env
+
+YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
+
+OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
 
 # Application definition
@@ -127,6 +136,3 @@ STATIC_URL = "/static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-OPENWEATHER_API_KEY = 'db702dfc2455bcb5aad1f3876003298b'
-

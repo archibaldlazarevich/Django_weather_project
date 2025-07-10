@@ -105,7 +105,7 @@
     }
 </style>
 
-<script src="https://api-maps.yandex.ru/2.1/?apikey=74462bb2-70ae-4102-a608-d58536e771d8&lang=ru_RU"
+<script src="https://api-maps.yandex.ru/2.1/?apikey={{ YANDEX_API_KEY }}&lang=ru_RU"
         type="text/javascript"></script>
 
 <main>
@@ -175,7 +175,6 @@
         suggestionsContainer.style.display = 'block';
       }
 
-      // Обработка ввода в поле с задержкой (debounce)
       input.addEventListener('input', function () {
         clearTimeout(timer);
         const query = this.value.trim();
@@ -185,7 +184,7 @@
         }
         timer = setTimeout(() => {
           ymaps.geocode(query, {
-            kind: 'locality', // фильтрация по населенным пунктам
+            kind: 'locality',
             results: 7
           }).then(res => {
             const suggestions = [];
@@ -200,14 +199,12 @@
         }, 300);
       });
 
-      // Обработка клика вне поля и подсказок для скрытия списка
       document.addEventListener('click', function (e) {
         if (!input.contains(e.target) && !suggestionsContainer.contains(e.target)) {
           clearSuggestions();
         }
       });
 
-      // Обработка клика по карте — ставим маркер и обновляем поле поиска
       map.events.add('click', function (e) {
         var coords = e.get('coords');
         selectedCoords = coords;
@@ -223,7 +220,6 @@
           });
         }
 
-        // Обратная геокодировка для обновления поля поиска
         ymaps.geocode(coords).then(function (res) {
           var geoObject = res.geoObjects.get(0);
           if (!geoObject) return;
@@ -234,7 +230,6 @@
         });
       });
 
-      // Кнопка узнать погоду — переходим на страницу с координатами
       document.getElementById('weatherBtn').addEventListener('click', function () {
         if (!selectedCoords) {
           alert('Выберите населённый пункт');
