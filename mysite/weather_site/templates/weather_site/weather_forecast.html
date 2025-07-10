@@ -1,0 +1,208 @@
+{% extends 'weather_site/base.html' %}
+{% load static %}
+
+{% block title %}
+Прогноз погоды
+{% endblock %}
+
+{% block body %}
+<style>
+    h1 {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .container {
+      display: flex;
+      gap: 20px;
+      padding: 0 20px 20px 20px;
+      height: 63vh;
+    }
+
+    .left-panel {
+      flex: 1 1 30%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .right-panel {
+      flex: 1 1 70%;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .right-panel::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    .right-panel::-webkit-scrollbar-track {
+      background: #f0f0f5;
+      border-radius: 10px;
+    }
+
+    .right-panel::-webkit-scrollbar-thumb {
+      background-color: #5057a0;
+      border-radius: 10px;
+      border: 3px solid #f0f0f5;
+      transition: background-color 0.3s ease;
+    }
+
+    .right-panel::-webkit-scrollbar-thumb:hover {
+      background-color: #3f427a;
+    }
+
+    #map {
+      flex: 1;
+      border: 1px solid #ccc;
+      border-radius: 15px;
+      overflow: hidden;
+    }
+    #map .ymaps-2-1-29-map {
+      border-radius: 15px !important;
+    }
+
+    .current-weather {
+      border: 1px solid #8e95dd;
+      padding: 15px;
+      font-size: 16px;
+      background: #8e95dd;
+      border-radius: 6px;
+
+    }
+
+    .current-weather-text {
+    display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 180px;
+    }
+
+    .current-weather .weather-text {
+      max-width: 65%;
+    }
+
+    .current-weather img {
+      width: 150px;
+      height: 150px;
+      object-fit: contain;
+    }
+
+    .forecast-day {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      align-items: center;
+    }
+
+    .forecast-cell {
+    border: 1px solid #8e95dd;
+    border-radius: 6px;
+    padding: 10px;
+    width: 100px;
+    height: 120px;
+    text-align: center;
+    background: #8e95dd;
+    flex-shrink: 0;
+  }
+
+    .forecast-cell .time {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .forecast-cell img {
+      width: 40px;
+      height: 40px;
+    }
+      .btn-select-city {
+    display: block;
+    width: 90%;
+    margin: 10px auto 0 auto;
+    padding: 12px;
+    font-size: 18px;
+    background-color: #5057a0;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .btn-select-city:hover {
+    background-color: #3f467f;
+  }
+
+    .p-text {
+        font-size: 20px;
+    }
+
+</style>
+
+<h1>Погода в {{ weather.first.name }} в настоящее время</h1>
+
+<div class="container">
+    <div class="left-panel">
+        <div class="current-weather">
+            <b class="p-text" >Погода по состоянию на {{ weather.first.dt }}</b>
+        <div class="current-weather-text">
+            <div class="weather-text">
+                <p>Температура: {{ weather.first.main.temp }} °C</p>
+                <p>Ощущается как: {{ weather.first.main.feels_like }} °C</p>
+                <p>Влажность: {{ weather.first.main.humidity }}%</p>
+                <p>Описание: {{ weather.first.weather.0.description }}</p>
+                <p>Скорость ветра: {{ weather.first.wind.speed }} м/с</p>
+            </div>
+            <img src="http://openweathermap.org/img/wn/{{ weather.first.weather.0.icon }}@2x.png" alt="">
+        </div>
+        </div>
+
+        <div id="map"></div>
+        <a href="{% url 'weather_data' %}" class="btn-select-city">Выбрать другой населённый пункт</a>
+    </div>
+
+    <div class="right-panel">
+        <h2>Прогноз на 5 дней</h2>
+
+        {% regroup weather.second.list by date_obj as days %}
+
+        {% for day in days %}
+        <div class="forecast-day">
+            <h3>{{ day.grouper|date:"d.m.Y" }}</h3>
+            {% for item in day.list %}
+            <div class="forecast-cell">
+                <div class="time">{{ item.dt_txt|slice:"11:16" }}</div>
+                <div>{{ item.main.temp }} °C</div>
+                <div>{{ item.weather.0.description }}</div>
+                <img src="http://openweathermap.org/img/wn/{{ item.weather.0.icon }}@2x.png" alt="">
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<script src="https://api-maps.yandex.ru/2.1/?apikey={{ YANDEX_API_KEY }}&lang=ru_RU" type="text/javascript"></script>
+<script>
+    ymaps.ready(function () {
+      var map = new ymaps.Map('map', {
+        center: [{{ weather.first.coord.lat }}, {{ weather.first.coord.lon }}],
+        zoom: 10,
+        controls: ['zoomControl', 'typeSelector']
+      });
+
+      var placemark = new ymaps.Placemark(
+        [{{ weather.first.coord.lat }}, {{ weather.first.coord.lon }}],
+        { balloonContent: '{{ weather.first.name }}' },
+        { preset: 'islands#redDotIcon' }
+      );
+
+      map.geoObjects.add(placemark);
+    });
+</script>
+{% endblock %}

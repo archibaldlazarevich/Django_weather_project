@@ -1,38 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load static %}
 <head>
+    {% block head %}
     <meta charset="UTF-8">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: #b0b3c6;
+            font-family: Arial, sans-serif;
+        }
+
+        .light-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #686b68;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 17px;
+            text-align: center;
+        }
+
+        footer {
+            background-color: #a4a7bd;
+            padding: 20px;
+            position:fixed;
+            left:0px;
+            bottom:0px;
+            height: 18vh;
+            width:100%;
+        }
+
+        footer > div {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1000px;
+            height: 50%;
+            margin-left: auto;
+            margin-right: auto;
+            align-items: center;
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 50px;
+        }
+
+        footer img {
+            height: 20px;
+            vertical-align: middle;
+            margin-top: 10px;
+        }
+
+        .footer-text {
+            text-align: center;
+            color: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+        .email-text {
+            text-align: center;
+            color: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+            margin: 15px 0;
+            user-select: none;
+        }
+
+        .footer-container a {
+            display: flex;
+            align-items: center;
+            color: black;
+            text-decoration: none;
+        }
+        .hero-title {
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.4;
+            text-align: center;
+            letter-spacing: 0.03em;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #2c3e50;
+        }
+        header.site-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #5057a0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        header.site-header .header-left a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 18px;
+        }
+
+        header.site-header .header-right a,
+        header.site-header .header-right .header-text,
+        header.site-header .header-right form {
+            margin-left: 20px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        header.site-header a:hover,
+        header.site-header .header-button:hover {
+            color: #c0c3e0;
+        }
+
+        .header-button {
+            background: transparent;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            padding: 0;
+            text-decoration: underline;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .header-text {
+            color: white;
+            font-weight: 600;
+            margin-right: 15px;
+            font-size: 15px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .sig-button {
+            color: white;
+            font-weight: 600;
+            margin-right: 15px;
+            font-size: 18px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-decoration: none;
+        }
+
+
+    </style>
+    {% endblock %}
     <title>
         {% block title %}
-            block title
-        {% endblock  %}
+        block title
+        {% endblock %}
     </title>
 </head>
 <body>
+<header class="site-header">
+    <div class="header-left">
+        <a href="{% url 'init' %}">На главную</a>
+    </div>
+    <div class="header-right">
+        {% if user.is_authenticated %}
+            <span class="header-text">Привет, {{ user.username }}!</span>
+            <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="header-button">Выйти</button>
+            </form>
+        {% else %}
+            <a class="sig-button" href="{% url 'login' %}">Вход</a>
+            <a class="sig-button" href="{% url 'signup' %}">Регистрация</a>
+        {% endif %}
+    </div>
+</header>
+
 {% block body %}
-    block body
 {% endblock %}
 <footer>
-            <div>
-                <div>
-                    <div class="footer-container">
-                        <span>compact_00@mail.ru</span>
-                    </div>
-                    <div class="footer-container">
-                        <span>+375 29 860 45 26</span>
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        <button class="light-button open-popup">Написать на email</button>
-                        <div class="footer-container">
-                            <a href="#"><img src="images/github.png" alt=""></a>
-                            <a href="#"><img src="images/link.png" alt=""></a>
-                            <a href="https://github.com/archibaldlazarevich"><img src="images/telegram.png" alt=""></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </footer>
+    <p class="hero-title">
+        Weather site — пет-проект, созданный на Django с интеграцией со сторонним API.<br>
+        Здесь вы можете узнать прогноз погоды по вашему населенному пункту или по вашей геолокации.
+    </p>
+    <div>
+        <p class="footer-text">E-mail: </p>
+        <span class="email-text">compact_00@mail.ru</span>
+        <a class="light-button open-popup"
+           href="mailto:compact_00@mail.ru?subject=Вопрос по проекту weather&body=Здравствуйте!">Написать</a>
+        <p class="footer-text">Социальные сети: </p>
+        <div class="footer-container">
+            <a href="https://github.com/archibaldlazarevich"><img alt="" src="{% static 'github.png' %}"></a>
+            <a href='https://linkedin.com/in/artur-lazarevich-426989335'><img alt="" src="{% static 'link.png' %}"></a>
+            <a href="https://t.me/BeshenayaPchelka"><img alt="" src="{% static 'telegram.png' %}"></a>
+        </div>
+    </div>
+</footer>
 </body>
 </html>
