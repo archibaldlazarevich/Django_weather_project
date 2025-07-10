@@ -1,75 +1,249 @@
 {% extends 'weather_site/base.html' %}
 {% load static %}
 
-{% block title %}Weather site{% endblock %}
+{% block title %}
+Выбор геопозиции
+{% endblock %}
 
 {% block body %}
-<h2>Прогноз погоды для {{ city|default:"вашего местоположения" }}</h2>
+<style>
+    main {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 70vh;
+      text-align: center;
+    }
 
-<div id="weather-container" style="display: flex; gap: 40px;">
+    .container {
+      display: flex;
+      align-items: flex-start;
+      height: 100%;
+      gap: 8px;
+      position: relative;
+    }
 
-    <!-- Блок с текущей погодой -->
-    <section id="current-weather" style="flex: 1; border: 1px solid #ccc; padding: 20px;">
-        {% if weather_current %}
-            <h3>Текущая погода</h3>
-            <p><strong>Город:</strong> {{ weather_current.name }}</p>
-            <p><strong>Температура:</strong> {{ weather_current.main.temp }} °C</p>
-            <p><strong>Погода:</strong> {{ weather_current.weather.0.description }}</p>
-            <p><strong>Ветер:</strong> {{ weather_current.wind.speed }} м/с</p>
-        {% else %}
-            <p>Данные о текущей погоде недоступны.</p>
-        {% endif %}
-    </section>
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      width: 550px;
+      position: relative;
+      height: 400px
+    }
 
-    <!-- Блок с прогнозом на 5 дней -->
-    <section id="forecast-5days" style="flex: 1; border: 1px solid #ccc; padding: 20px; overflow-y: auto; max-height: 400px;">
-        {% if weather_forecast %}
-            <h3>Прогноз на 5 дней</h3>
-            <ul>
-                {% for item in weather_forecast.list %}
-                    <li>
-                        <strong>{{ item.dt_txt }}:</strong>
-                        {{ item.main.temp }} °C, {{ item.weather.0.description }}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>Данные о прогнозе недоступны.</p>
-        {% endif %}
-    </section>
+    .search-block {
+      position: relative
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px 0;
+      gap: 15px;
+      position: relative;
+    }
 
-</div>
+    .search-label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 20px;
+    }
+
+    #Search {
+      width: 90%;
+      height: 35px;
+      font-size: 18px;
+      padding: 5px 10px;
+      box-sizing: border-box;
+      border-radius: 6px;
+    }
+
+    #weatherBtn {
+      width: 90%;
+      padding: 12px;
+      font-size: 18px;
+      background-color: #5057a0;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      align-self: center;
+    }
+
+    #weatherBtn:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
+
+    #map {
+      flex: 1;
+      border: 1px solid #ccc;
+      margin: 20px;
+      height: 60vh;
+    }
+
+    #suggestions {
+      font-family: 'Arial', sans-serif;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      max-height: auto;
+      overflow-y: auto;
+      background: white;
+      position: absolute;
+      top: 75px;
+      width: 90%;
+      z-index: 10000;
+      box-sizing: border-box;
+    }
+
+    #suggestions div {
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    #suggestions div:hover {
+      background-color: #f0f0f0;
+    }
+</style>
+
+<script src="https://api-maps.yandex.ru/2.1/?apikey=74462bb2-70ae-4102-a608-d58536e771d8&lang=ru_RU"
+        type="text/javascript"></script>
+
+<main>
+    <div class="container">
+        <div class="left-panel">
+            <div class="search-block">
+                <label class="search-label" for="Search">Выберите населённый пункт</label>
+                <input autocomplete="off" id="Search" placeholder="Начните вводить название"/>
+                <div id="suggestions" style="display:none;"></div>
+            </div>
+            <div class="search-block" style="margin-top: auto;">
+                <button disabled id="weatherBtn">Узнать погоду</button>
+            </div>
+        </div>
+        <div id="map"></div>
+    </div>
+</main>
 
 <script>
-// Получаем геолокацию пользователя и перезагружаем страницу с параметром city
-document.addEventListener('DOMContentLoaded', () => {
-    if (!'{{ city }}') {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
+    ymaps.ready(function () {
+      var map = new ymaps.Map('map', {
+        center: [55, 27],
+        zoom: 5,
+        controls: ['zoomControl', 'typeSelector']
+      });
 
-                // Обратный геокодинг через OpenWeatherMap API для получения города
-                const apiKey = '{{ OPENWEATHER_API_KEY }}';
-                fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data && data.length > 0) {
-                            const city = data[0].name;
-                            // Перезагружаем страницу с параметром city
-                            const url = new URL(window.location);
-                            url.searchParams.set('city', city);
-                            window.location.href = url.toString();
-                        }
-                    });
-            }, error => {
-                console.error('Ошибка получения геолокации:', error);
-            });
-        } else {
-            console.error('Геолокация не поддерживается вашим браузером');
+      var placemark;
+      var selectedCoords = null;
+
+      const input = document.getElementById('Search');
+      const suggestionsContainer = document.getElementById('suggestions');
+      let timer;
+
+      // Функция очистки подсказок
+      function clearSuggestions() {
+        suggestionsContainer.innerHTML = '';
+        suggestionsContainer.style.display = 'none';
+      }
+
+      // Функция отображения подсказок
+      function showSuggestions(items) {
+        clearSuggestions();
+        if (!items.length) return;
+
+        items.forEach(item => {
+          const div = document.createElement('div');
+          div.textContent = item.name;
+          div.dataset.coords = JSON.stringify(item.coords);
+          div.addEventListener('click', () => {
+            input.value = item.name;
+            selectedCoords = item.coords;
+            map.setCenter(selectedCoords, 12, {duration: 500});
+            if (placemark) {
+              placemark.geometry.setCoordinates(selectedCoords);
+            } else {
+              placemark = new ymaps.Placemark(selectedCoords, {}, {draggable: true});
+              map.geoObjects.add(placemark);
+              placemark.events.add('dragend', function () {
+                selectedCoords = placemark.geometry.getCoordinates();
+              });
+            }
+            document.getElementById('weatherBtn').disabled = false;
+            clearSuggestions();
+          });
+          suggestionsContainer.appendChild(div);
+        });
+        suggestionsContainer.style.display = 'block';
+      }
+
+      // Обработка ввода в поле с задержкой (debounce)
+      input.addEventListener('input', function () {
+        clearTimeout(timer);
+        const query = this.value.trim();
+        if (!query) {
+          clearSuggestions();
+          return;
         }
-    }
-});
-</script>
+        timer = setTimeout(() => {
+          ymaps.geocode(query, {
+            kind: 'locality', // фильтрация по населенным пунктам
+            results: 7
+          }).then(res => {
+            const suggestions = [];
+            res.geoObjects.each(geoObject => {
+              suggestions.push({
+                name: geoObject.getAddressLine(),
+                coords: geoObject.geometry.getCoordinates()
+              });
+            });
+            showSuggestions(suggestions);
+          });
+        }, 300);
+      });
 
+      // Обработка клика вне поля и подсказок для скрытия списка
+      document.addEventListener('click', function (e) {
+        if (!input.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+          clearSuggestions();
+        }
+      });
+
+      // Обработка клика по карте — ставим маркер и обновляем поле поиска
+      map.events.add('click', function (e) {
+        var coords = e.get('coords');
+        selectedCoords = coords;
+
+        if (placemark) {
+          placemark.geometry.setCoordinates(coords);
+        } else {
+          placemark = new ymaps.Placemark(coords, {}, {draggable: true});
+          map.geoObjects.add(placemark);
+
+          placemark.events.add('dragend', function () {
+            selectedCoords = placemark.geometry.getCoordinates();
+          });
+        }
+
+        // Обратная геокодировка для обновления поля поиска
+        ymaps.geocode(coords).then(function (res) {
+          var geoObject = res.geoObjects.get(0);
+          if (!geoObject) return;
+          var city = geoObject.getLocalities().length ? geoObject.getLocalities()[0] : geoObject.getThoroughfare() || '';
+          input.value = city || '';
+          document.getElementById('weatherBtn').disabled = false;
+          clearSuggestions();
+        });
+      });
+
+      // Кнопка узнать погоду — переходим на страницу с координатами
+      document.getElementById('weatherBtn').addEventListener('click', function () {
+        if (!selectedCoords) {
+          alert('Выберите населённый пункт');
+          return;
+        }
+        var [lat, lon] = selectedCoords;
+        var url = `{% url 'weather_forecast' %}?lat=${lat}&lng=${lon}`;
+        window.location.href = url;
+      });
+    });
+</script>
 {% endblock %}

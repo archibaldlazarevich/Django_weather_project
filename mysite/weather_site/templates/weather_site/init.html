@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-    Главная страница
+Главная страница
 {% endblock %}
 
 {% block body %}
@@ -11,13 +11,12 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
-        align-items: center;
         min-height: 70vh;
+        text-align: center;
     }
 
     .weather-btn {
-        display: block;
-        width: 50%;
+        width: 30%;
         padding: 20px 0;
         background: #5057a0;
         color: #fff;
@@ -33,10 +32,16 @@
     .weather-btn:hover {
         background: #3b3f66;
     }
+    a-button {
+    text-decoration: none;
+    }
+
 </style>
 
 <main>
-    <button type="submit" class="weather-btn">Узнать прогноз погоды</button><br>
+    <a class="a-button" href="{% url 'weather_data' %}">
+    <button class="weather-btn" type="button">Узнать прогноз погоды</button>
+    </a>
 </main>
 
 {% endblock %}

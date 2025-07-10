@@ -4,9 +4,13 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-
+from django.views.generic.base import TemplateView
+from datetime import datetime, timedelta
+from geopy.geocoders import Nominatim
+from django.core.exceptions import ObjectDoesNotExist
 from mysite import settings
-from .models import WeatherData
+from weather_site.models import City
+
 
 def signup_view(request):
     if request.method == 'POST':
@@ -18,7 +22,7 @@ def signup_view(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('weather_site/weather_data.html')
+                return redirect('weather_data')
     else:
         form = UserCreationForm()
     return render(request, 'weather_site/signup.html', {'form': form})
@@ -34,54 +38,99 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect('init')
+            return redirect('weather_data')
         else:
             messages.error(request, 'Неверное имя пользователя или пароль')
     else:
         form = AuthenticationForm()
     return render(request, 'weather_site/login.html', {'form': form})
 
+@login_required(login_url='login')
+def weather_data_view(request):
+    return render(request, 'weather_site/weather_data.html')
 
-@login_required(login_url='signup')
-def weather_view(request):
-    city = request.GET.get('city')
 
-    weather_current = None
-    weather_forecast = None
+class WeatherView(TemplateView):
+    template_name = "weather_site/weather_forecast.html"
 
-    if city:
-        # Проверяем, есть ли уже данные в БД
+    def is_data_expired(self, place_id):
         try:
-            weather_data = WeatherData.objects.get(city=city)
-            weather_current = weather_data.current_weather
-            weather_forecast = weather_data.forecast_5days
-        except WeatherData.DoesNotExist:
-            # Если нет — делаем запрос к OpenWeatherMap API
-            api_key = settings.OPENWEATHER_API_KEY
-            # Текущая погода
-            url_current = f"https://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&appid={api_key}&lang=ru"
-            # Прогноз на 5 дней
-            url_forecast = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&units=metric&appid={api_key}&lang=ru"
+            City.objects.get(place_id=place_id)
+            return True
+        except ObjectDoesNotExist:
+            return None
 
-            resp_current = requests.get(url_current)
-            resp_forecast = requests.get(url_forecast)
+    def get_cached_data(self, place_id):
+        city = City.objects.get(place_id=place_id)
+        return city.data
 
-            if resp_current.status_code == 200 and resp_forecast.status_code == 200:
-                weather_current = resp_current.json()
-                weather_forecast = resp_forecast.json()
+    def add_data_in_base(self, data, place_id):
+        City(place_id = place_id, data = data).save()
 
-                WeatherData.objects.create(
-                    city=city,
-                    current_weather=weather_current,
-                    forecast_5days=weather_forecast
-                )
-            else:
-                weather_current = None
-                weather_forecast = None
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        lat = self.request.GET.get('lat')
+        lng = self.request.GET.get('lng')
 
-    context = {
-        'weather_current': weather_current,
-        'weather_forecast': weather_forecast,
-        'city': city,
-    }
-    return render(request, 'weather_site/init.html', context)
+        city = self.determ_city(coord=(lat, lng))
+
+        if self.is_data_expired(place_id= city[1]):
+            context['weather'] = self.get_cached_data(place_id= city[1])
+        else:
+            context['weather'] = self.fetch_from_api(latitude= lat, longitude= lng)
+
+        for item in context['weather']['second']['list']:
+            item['date_obj'] = datetime.strptime(item['date_obj'], '%Y-%m-%d %H:%M').date()
+        return context
+
+    def determ_city(self, coord):
+        """
+        Метод для определения города по координатам,
+        запроса к бд для получения id города в бд city
+        :param coord: координаты (latitude, longitude)
+        :return: Название города если True или False,
+        город не найден по данным координатам (пример: если это деревня, то None)
+        """
+        geolocator = Nominatim(user_agent="GetLoc", timeout=10)
+        location = geolocator.reverse(query= coord, language='ru')
+        if not location:
+            return '"Местоположение не определено"'
+        if "locality" in location.raw["address"]:
+            answer = (
+                f"около н.п. {location.raw['address']['locality']},"
+                f" {location.raw['address']['city']}"
+            )
+        elif "village" in location.raw["address"]:
+            answer = f"н.п. {location.raw['address']['village']}"
+        elif "town" in location.raw["address"]:
+            answer = f"н.п. {location.raw['address']['town']}"
+        elif "city" in location.raw["address"]:
+            answer = f"{location.raw['address']['city']}"
+        else:
+            answer = location
+        return answer, location.raw['place_id']
+
+
+    def fetch_from_api(self, latitude, longitude):
+        url = (f'https://api.openweathermap.org/data/2.5/weather?'
+               f'lat={latitude}&lon={longitude}&appid={settings.OPENWEATHER_API_KEY}&lang=ru&units=metric')
+        city = self.determ_city(coord=(latitude, longitude))
+        response = requests.get(url).json()
+        response['name'] = city[0]
+        dt_utc = datetime.fromtimestamp(response['dt'])
+        dt_local = dt_utc + timedelta(hours=3)
+        response['dt'] = dt_local.strftime('%d.%m.%Y %H:%M')
+
+        second_url = (f"https://api.openweathermap.org/data/2.5/forecast?"
+                      f"lat={latitude}&lon={longitude}&lang=ru&appid={settings.OPENWEATHER_API_KEY}&lang=ru&units=metric")
+        sec_response = requests.get(second_url).json()
+
+        for item in sec_response['list']:
+            dt_utc = datetime.fromtimestamp(item['dt'])
+            dt_local = dt_utc + timedelta(hours=3)
+            item['dt_txt'] = dt_local.strftime('%Y-%m-%d %H:%M')
+            item['date_obj'] = dt_local.strftime('%Y-%m-%d %H:%M')
+        answer = {'first': response, 'second': sec_response}
+        self.add_data_in_base(data= answer, place_id = city[1])
+        return answer
+

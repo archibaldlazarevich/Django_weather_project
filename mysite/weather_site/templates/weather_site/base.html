@@ -2,13 +2,14 @@
 <html lang="en">
 {% load static %}
 <head>
+    {% block head %}
     <meta charset="UTF-8">
     <style>
         html, body {
             margin: 0;
             padding: 0;
             background-color: #b0b3c6;
-
+            font-family: Arial, sans-serif;
         }
 
         .light-button {
@@ -29,7 +30,7 @@
             position:fixed;
             left:0px;
             bottom:0px;
-            height: 20vh;
+            height: 18vh;
             width:100%;
         }
 
@@ -93,25 +94,36 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #2c3e50;
         }
-            header.site-header {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        padding: 15px 30px;
-        background-color: #5057a0;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        header.site-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #5057a0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
-        header.site-header a {
+
+        header.site-header .header-left a {
             color: #fff;
             text-decoration: none;
             font-weight: 600;
-            margin-left: 20px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            transition: color 0.3s;
+            font-size: 18px;
         }
-        header.site-header a:hover {
+
+        header.site-header .header-right a,
+        header.site-header .header-right .header-text,
+        header.site-header .header-right form {
+            margin-left: 20px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        header.site-header a:hover,
+        header.site-header .header-button:hover {
             color: #c0c3e0;
         }
+
         .header-button {
             background: transparent;
             border: none;
@@ -130,7 +142,19 @@
             font-size: 15px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
+        .sig-button {
+            color: white;
+            font-weight: 600;
+            margin-right: 15px;
+            font-size: 18px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-decoration: none;
+        }
+
+
     </style>
+    {% endblock %}
     <title>
         {% block title %}
         block title
@@ -139,20 +163,23 @@
 </head>
 <body>
 <header class="site-header">
-    {% if user.is_authenticated %}
-    <span class="header-text">
-            Привет, {{ user.username }}!
-        </span>
-    <form method="post" action="{% url 'logout' %}" style="display: inline;">
-        {% csrf_token %}
-        <button type="submit" class="header-button">Выйти
-        </button>
-    </form>
-    {% else %}
-    <a href="{% url 'login' %}">Вход</a>
-    <a href="{% url 'signup' %}">Регистрация</a>
-    {% endif %}
+    <div class="header-left">
+        <a href="{% url 'init' %}">На главную</a>
+    </div>
+    <div class="header-right">
+        {% if user.is_authenticated %}
+            <span class="header-text">Привет, {{ user.username }}!</span>
+            <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="header-button">Выйти</button>
+            </form>
+        {% else %}
+            <a class="sig-button" href="{% url 'login' %}">Вход</a>
+            <a class="sig-button" href="{% url 'signup' %}">Регистрация</a>
+        {% endif %}
+    </div>
 </header>
+
 {% block body %}
 {% endblock %}
 <footer>
@@ -163,13 +190,13 @@
     <div>
         <p class="footer-text">E-mail: </p>
         <span class="email-text">compact_00@mail.ru</span>
-        <a href="mailto:compact_00@mail.ru?subject=Вопрос по проекту weather&body=Здравствуйте!"
-           class="light-button open-popup">Написать</a>
+        <a class="light-button open-popup"
+           href="mailto:compact_00@mail.ru?subject=Вопрос по проекту weather&body=Здравствуйте!">Написать</a>
         <p class="footer-text">Социальные сети: </p>
         <div class="footer-container">
-            <a href="https://github.com/archibaldlazarevich"><img src="{% static 'github.png' %}" alt=""></a>
-            <a href='https://linkedin.com/in/artur-lazarevich-426989335'><img src="{% static 'link.png' %}" alt=""></a>
-            <a href="https://t.me/BeshenayaPchelka"><img src="{% static 'telegram.png' %}" alt=""></a>
+            <a href="https://github.com/archibaldlazarevich"><img alt="" src="{% static 'github.png' %}"></a>
+            <a href='https://linkedin.com/in/artur-lazarevich-426989335'><img alt="" src="{% static 'link.png' %}"></a>
+            <a href="https://t.me/BeshenayaPchelka"><img alt="" src="{% static 'telegram.png' %}"></a>
         </div>
     </div>
 </footer>

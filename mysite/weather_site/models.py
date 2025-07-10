@@ -4,17 +4,7 @@ from django.db import models
 
 
 class City(models.Model):
-    name = models.CharField(max_length=100)
-    country = models.CharField(max_length=2)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
+    place_id = models.IntegerField(unique=True)
+    data = models.JSONField(default=dict)
     last_update = models.DateTimeField(auto_now=True)
 
-
-class WeatherData(models.Model):
-    city = models.ForeignKey(City, on_delete=models.CASCADE)
-    temperature = models.FloatField()
-    feels_like = models.FloatField()
-    description = models.CharField(max_length=255)
-    icon = models.CharField(max_length=10)
-    timestamp = models.DateTimeField(auto_now_add=True)
