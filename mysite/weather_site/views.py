@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import requests
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
@@ -10,7 +11,7 @@ from django.shortcuts import redirect, render
 from django.views.generic.base import TemplateView
 from geopy.geocoders import Nominatim
 from weather_site.models import City
-from django.conf import settings
+
 
 def signup_view(request):
     if request.method == "POST":
@@ -48,7 +49,11 @@ def login_view(request):
 
 @login_required(login_url="login")
 def weather_data_view(request):
-    return render(request, "weather_site/weather_data.html", context= {'YANDEX_API_KEY': settings.YANDEX_API_KEY})
+    return render(
+        request,
+        "weather_site/weather_data.html",
+        context={"YANDEX_API_KEY": settings.YANDEX_API_KEY},
+    )
 
 
 class WeatherView(TemplateView):
@@ -86,7 +91,7 @@ class WeatherView(TemplateView):
             item["date_obj"] = datetime.strptime(
                 item["date_obj"], "%Y-%m-%d %H:%M"
             ).date()
-        context['YANDEX_API_KEY'] = settings.YANDEX_API_KEY
+        context["YANDEX_API_KEY"] = settings.YANDEX_API_KEY
         return context
 
     def determ_city(self, coord):
