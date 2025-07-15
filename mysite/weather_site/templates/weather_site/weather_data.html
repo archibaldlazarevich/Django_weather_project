@@ -139,13 +139,11 @@
       const suggestionsContainer = document.getElementById('suggestions');
       let timer;
 
-      // Функция очистки подсказок
       function clearSuggestions() {
         suggestionsContainer.innerHTML = '';
         suggestionsContainer.style.display = 'none';
       }
 
-      // Функция отображения подсказок
       function showSuggestions(items) {
         clearSuggestions();
         if (!items.length) return;
