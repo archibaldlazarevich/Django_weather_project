@@ -30,9 +30,11 @@ SECRET_KEY = (
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS: list = ["a1140230.xsph.ru", "141.8.192.84"]
+ALLOWED_HOSTS: list = [
+    # '0.0.0.0'
+]
 
-load_dotenv()  # загружает переменные из .env
+load_dotenv()
 
 YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
 
@@ -126,12 +128,18 @@ USE_I18N = True
 
 USE_TZ = True
 
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "/static/"
+STATIC_URL = "static/"
 
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STATICFILES_DIRS = [
+    BASE_DIR / "weather_site" / "static",
+]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
